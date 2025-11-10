@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: saree-customs
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build:full
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        scope: build
+        sync: false
