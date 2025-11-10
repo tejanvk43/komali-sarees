@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { mockTags, mockProducts, mockCartItems } from "./mockData";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,6 +13,24 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // For demo: handle cart and product operations with mock data
+  if (url === "/api/tags" && method === "GET") {
+    return new Response(JSON.stringify(mockTags), { status: 200 });
+  }
+  
+  if (url === "/api/products/with-tags" && method === "GET") {
+    return new Response(JSON.stringify(mockProducts), { status: 200 });
+  }
+  
+  if (url.startsWith("/api/cart") && method === "GET") {
+    return new Response(JSON.stringify(mockCartItems), { status: 200 });
+  }
+  
+  // For mutations (POST, PUT, DELETE, PATCH), just return success
+  if (method !== "GET") {
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+  }
+
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
