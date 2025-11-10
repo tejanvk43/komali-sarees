@@ -4,10 +4,8 @@ services:
     runtime: node
     plan: free
     buildCommand: npm ci --include=dev && npm run build:full
-    startCommand: npm start
+    startCommand: npx serve -s dist/public -l 3000
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        scope: build
-        sync: false
