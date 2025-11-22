@@ -1,18 +1,17 @@
 import { db } from "@/firebase/client";
-import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy, getDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy, updateDoc } from "firebase/firestore";
 import { Product } from "@/types";
-import { products as localProducts } from "@/data/products";
 
 export async function getAllProducts(): Promise<Product[]> {
     try {
-        if (!db) return localProducts;
+        if (!db) return [];
         const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q).catch(() => getDocs(collection(db, "products")));
-        if (snapshot.empty) return localProducts;
+        if (snapshot.empty) return [];
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
     } catch (error) {
         console.error("Error fetching products:", error);
-        return localProducts;
+        return [];
     }
 }
 

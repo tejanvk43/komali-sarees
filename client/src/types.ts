@@ -19,16 +19,18 @@ export interface Product {
     fabric: string;
     occasion: string;
     color: string;
+    dressType?: string;
     updatedAt?: string;
     createdAt?: string;
+    featured?: boolean;
 }
 
 export interface Tag {
     id: string;
     name: string;
-    category: string;
-    colorHex: string | null;
-    createdAt: Date;
+    category: 'fabric' | 'color' | 'occasion' | 'style' | 'dressType';
+    colorHex?: string | null;
+    createdAt: any;
 }
 
 export interface ProductWithTags extends Product {
@@ -45,4 +47,13 @@ export interface CartItem {
 
 export interface CartItemWithProduct extends CartItem {
     product: Product;
+}
+
+export interface FilterState {
+    colors: string[];
+    fabrics: string[];
+    occasions: string[];
+    styles: string[];
+    dressTypes: string[];
+    priceRange: [number, number];
 }

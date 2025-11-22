@@ -28,7 +28,7 @@ export function ProductCard({ product, onClick, onAddToCart }: ProductCardProps)
           />
         )}
         
-        {!product.inStock && (
+        {(!product.stock || product.stock <= 0) && (
           <Badge
             variant="secondary"
             className="absolute top-2 left-2"
@@ -55,7 +55,7 @@ export function ProductCard({ product, onClick, onAddToCart }: ProductCardProps)
               e.stopPropagation();
               onAddToCart();
             }}
-            disabled={!product.inStock}
+            disabled={!product.stock || product.stock <= 0}
             data-testid={`button-add-to-cart-${product.id}`}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
@@ -77,7 +77,7 @@ export function ProductCard({ product, onClick, onAddToCart }: ProductCardProps)
             <div
               key={tag.id}
               className="w-5 h-5 rounded-full border-2 border-background shadow-sm"
-              style={{ backgroundColor: tag.colorHex || '#ccc' }}
+              style={{ backgroundColor: tag.colorHex || tag.name }}
               title={tag.name}
               data-testid={`color-swatch-${tag.id}`}
             />
@@ -94,7 +94,7 @@ export function ProductCard({ product, onClick, onAddToCart }: ProductCardProps)
             className="text-2xl font-bold"
             data-testid={`text-price-${product.id}`}
           >
-            ₹{parseFloat(product.price).toLocaleString('en-IN')}
+            ₹{parseFloat(String(product.price)).toLocaleString('en-IN')}
           </span>
           <div className="flex gap-1">
             <Badge variant="secondary" className="text-xs">

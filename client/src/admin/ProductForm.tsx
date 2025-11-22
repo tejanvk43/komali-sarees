@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Product } from "@/types";
+import { Product, Tag } from "@/types";
 import { saveProduct } from "@/utils/firestore";
 import { uploadFileWithProgress, deleteFileFromUrl } from "@/utils/storage";
+import { db } from "@/firebase/client";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +21,17 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
   
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const currentImages = watch("images") || [];
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      const q = query(collection(db, "tags"), orderBy("name"));
+      const snapshot = await getDocs(q);
+      setAvailableTags(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tag[]);
+    };
+    fetchTags();
+  }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -76,14 +88,12 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
     const urlToRemove = currentImages[indexToRemove];
     if (confirm("Delete this image? This cannot be undone.")) {
       try {
-        // Only try to delete from storage if it's a firebase URL
         if (urlToRemove.includes("firebasestorage")) {
           await deleteFileFromUrl(urlToRemove);
         }
         setValue("images", currentImages.filter((_, index) => index !== indexToRemove));
       } catch (e) {
         console.error("Failed to delete image from storage", e);
-        // Still remove from list if storage delete fails (orphan cleanup can happen later)
         setValue("images", currentImages.filter((_, index) => index !== indexToRemove));
       }
     }
@@ -112,38 +122,82 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
     }
   };
 
+  const fabricTags = availableTags.filter(t => t.category === 'fabric');
+  const colorTags = availableTags.filter(t => t.category === 'color');
+  const occasionTags = availableTags.filter(t => t.category === 'occasion');
+  const dressTypeTags = availableTags.filter(t => t.category === 'dressType');
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl bg-white p-6 rounded shadow">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl mx-auto bg-white p-6 rounded shadow">
       <h2 className="text-xl font-bold mb-4">{initialData ? 'Edit Product' : 'Add New Product'}</h2>
       
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Product Name</label>
-          <Input {...register("name")} placeholder="Kanjivaram Silk Saree" required />
+          <Input {...register("name", { required: true })} placeholder="Tussar Silk Saree" />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">Price (₹)</label>
-          <Input {...register("price")} type="number" placeholder="15000" required />
+          <Input type="number" {...register("price", { required: true })} placeholder="9000" />
         </div>
       </div>
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Description</label>
-        <Textarea {...register("description")} placeholder="Detailed product description..." rows={4} />
+        <Textarea {...register("description")} placeholder="Rich textured Tussar silk saree..." />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Fabric</label>
-          <Input {...register("fabric")} placeholder="Silk" />
+          <label className="text-sm font-medium">Dress Type</label>
+          <select 
+            {...register("dressType")}
+            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">Select Type</option>
+            {dressTypeTags.map(t => (
+              <option key={t.id} value={t.name}>{t.name}</option>
+            ))}
+          </select>
         </div>
         <div className="space-y-2">
+          <label className="text-sm font-medium">Fabric</label>
+          <select 
+            {...register("fabric")}
+            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">Select Fabric</option>
+            {fabricTags.map(t => (
+              <option key={t.id} value={t.name}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
           <label className="text-sm font-medium">Color</label>
-          <Input {...register("color")} placeholder="Red" />
+          <select 
+            {...register("color")}
+            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">Select Color</option>
+            {colorTags.map(t => (
+              <option key={t.id} value={t.name}>{t.name}</option>
+            ))}
+          </select>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">Occasion</label>
-          <Input {...register("occasion")} placeholder="Wedding" />
+          <select 
+            {...register("occasion")}
+            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">Select Occasion</option>
+            {occasionTags.map(t => (
+              <option key={t.id} value={t.name}>{t.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 

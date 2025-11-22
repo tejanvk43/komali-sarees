@@ -1,186 +1,215 @@
-import { useState } from 'react';
-import { Filter, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { HeroCarousel } from '@/components/HeroCarousel';
-import { Navigation } from '@/components/Navigation';
-import { ProductCard } from '@/components/ProductCard';
-import { FilterSidebar, type FilterState } from '@/components/FilterSidebar';
-import { CartDrawer } from '@/components/CartDrawer';
-import { ProductDetailModal } from '@/components/ProductDetailModal';
-import { useToast } from '@/hooks/use-toast';
-import { products, tags } from '@/data/products';
-import { useCart } from '@/hooks/use-cart';
-import type { ProductWithTags } from '@/types';
+import { useState, useEffect, useMemo } from "react";
+import { Filter, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ProductCard } from "@/components/ProductCard";
+import { FilterSidebar } from "@/components/FilterSidebar";
+import { useSearch } from "wouter";
+
+import { ProductDetailModal } from "@/components/ProductDetailModal";
+import { useToast } from "@/hooks/use-toast";
+import { getAllProducts } from "@/utils/firestore";
+import { Tag } from "@/types";
+import { useCart } from "@/hooks/use-cart";
+import type { ProductWithTags, FilterState } from "@/types";
+
+import { db } from "@/firebase/client";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
 export default function Shop() {
   const { toast } = useToast();
-  const [cartOpen, setCartOpen] = useState(false);
+  const searchString = useSearch();
+  
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [products, setProducts] = useState<ProductWithTags[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch Tags
+        const tagsQuery = query(collection(db, "tags"), orderBy("name"));
+        const tagsSnapshot = await getDocs(tagsQuery);
+        const fetchedTags = tagsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tag[];
+        setTags(fetchedTags);
+
+        // Fetch Products
+        const productsData = await getAllProducts();
+        
+        // Enrich products with tag objects based on their string attributes
+        const enrichedProducts = productsData.map(p => {
+          const productTags: Tag[] = [];
+          
+          // Find matching tags for the product's attributes
+          const colorTag = fetchedTags.find(t => t.category === 'color' && t.name === p.color);
+          if (colorTag) productTags.push(colorTag);
+
+          const fabricTag = fetchedTags.find(t => t.category === 'fabric' && t.name === p.fabric);
+          if (fabricTag) productTags.push(fabricTag);
+
+          const occasionTag = fetchedTags.find(t => t.category === 'occasion' && t.name === p.occasion);
+          if (occasionTag) productTags.push(occasionTag);
+
+          return { ...p, tags: productTags } as ProductWithTags;
+        });
+
+        setProducts(enrichedProducts);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductWithTags | null>(null);
-  
-  const { items: cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
+  const { addItem } = useCart();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [filters, setFilters] = useState<FilterState>({
     colors: [],
     fabrics: [],
     occasions: [],
     styles: [],
+    dressTypes: [],
     priceRange: [0, 50000],
   });
 
-  const handleAddToCart = (productId: string) => {
-    addToCart(productId);
+  // Update search query when search string changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams(searchString);
+    const query = searchParams.get('search') || '';
+    setSearchQuery(query);
+  }, [searchString]);
+
+  const handleAddToCart = (product: ProductWithTags) => {
+    addItem(product);
     toast({
-      title: 'Added to cart',
-      description: 'Product has been added to your cart',
+      title: "Added to cart",
+      description: "Item has been added to your cart",
     });
   };
 
-  const filteredProducts = products.filter((product) => {
-    const price = parseFloat(product.price);
-    if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
-      return false;
-    }
+  // Use useMemo to recalculate when searchQuery or products/filters change
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      // Search Filter
+      const query = searchQuery.toLowerCase();
+      
+      if (query) {
+        const matchesName = product.name.toLowerCase().includes(query);
+        const matchesFabric = product.fabric.toLowerCase().includes(query);
+        const matchesColor = product.color.toLowerCase().includes(query);
+        const matchesOccasion = product.occasion.toLowerCase().includes(query);
+        
+        if (!matchesName && !matchesFabric && !matchesColor && !matchesOccasion) return false;
+      }
 
-    if (filters.fabrics.length > 0 && !filters.fabrics.includes(product.fabric)) {
-      return false;
-    }
+      if (filters.colors.length > 0 && !filters.colors.includes(product.color)) return false;
+      if (filters.fabrics.length > 0 && !filters.fabrics.includes(product.fabric)) return false;
+      if (filters.occasions.length > 0 && !filters.occasions.includes(product.occasion)) return false;
+      if (filters.dressTypes && filters.dressTypes.length > 0 && product.dressType && !filters.dressTypes.includes(product.dressType)) return false;
+      
+      const price = Number(product.price);
+      if (price < filters.priceRange[0] || price > filters.priceRange[1]) return false;
 
-    if (filters.occasions.length > 0 && !filters.occasions.includes(product.occasion)) {
-      return false;
-    }
-
-    const productColorTags = product.tags.filter(t => t.category === 'color').map(t => t.name);
-    if (filters.colors.length > 0 && !filters.colors.some(c => productColorTags.includes(c))) {
-      return false;
-    }
-
-    const productStyleTags = product.tags.filter(t => t.category === 'style').map(t => t.name);
-    if (filters.styles.length > 0 && !filters.styles.some(s => productStyleTags.includes(s))) {
-      return false;
-    }
-
-    return true;
-  });
+      return true;
+    });
+  }, [products, filters, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation
-        cartItemCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
-        onCartClick={() => setCartOpen(true)}
-      />
-
-      <HeroCarousel />
-
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-24">
-              <FilterSidebar
-                tags={tags}
-                filters={filters}
-                onFilterChange={setFilters}
-              />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <aside className={`
+            lg:w-64 flex-shrink-0
+            fixed lg:static inset-0 z-40 bg-background lg:bg-transparent
+            transform transition-transform duration-300 ease-in-out
+            ${filterOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            p-6 lg:p-0 overflow-y-auto lg:overflow-visible
+          `}>
+            <div className="flex justify-between items-center lg:hidden mb-6">
+              <h2 className="text-xl font-bold">Filters</h2>
+              <Button variant="ghost" size="icon" onClick={() => setFilterOpen(false)}>
+                <X className="h-6 w-6" />
+              </Button>
             </div>
+            <FilterSidebar
+              filters={filters}
+              onFilterChange={setFilters}
+              tags={tags}
+            />
           </aside>
 
           <main className="flex-1">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-3xl font-serif font-medium">
-                  Our Collection
-                </h2>
-                <p className="text-muted-foreground mt-1">
-                  {filteredProducts.length} sarees available
-                </p>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-serif font-bold text-primary">Collection</h1>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  className="lg:hidden"
+                  onClick={() => setFilterOpen(true)}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
+                <span className="text-muted-foreground">{filteredProducts.length} Products</span>
               </div>
-
-              <Button
-                variant="outline"
-                className="lg:hidden"
-                onClick={() => setFilterOpen(true)}
-                data-testid="button-open-filters"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
             </div>
 
-            {filteredProducts.length === 0 ? (
-              <div className="text-center py-20">
-                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                  <X className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">No products found</h3>
-                <p className="text-muted-foreground mb-6">
-                  Try adjusting your filters to see more results
-                </p>
-                <Button
-                  onClick={() => setFilters({
-                    colors: [],
-                    fabrics: [],
-                    occasions: [],
-                    styles: [],
-                    priceRange: [0, 50000],
-                  })}
-                  data-testid="button-clear-all-filters"
-                >
-                  Clear All Filters
-                </Button>
-              </div>
+            {loading ? (
+              <div className="text-center py-20 text-lg text-muted-foreground">Loading products...</div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onClick={() => setSelectedProduct(product)}
-                    onAddToCart={() => handleAddToCart(product.id)}
-                  />
-                ))}
-              </div>
+              filteredProducts.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <X className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-medium mb-2">No products found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Try adjusting your filters to see more results
+                  </p>
+                  <Button
+                    onClick={() => setFilters({
+                      colors: [],
+                      fabrics: [],
+                      occasions: [],
+                      styles: [],
+                      dressTypes: [],
+                      priceRange: [0, 50000],
+                    })}
+                    data-testid="button-clear-all-filters"
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                  {filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onClick={() => setSelectedProduct(product)}
+                      onAddToCart={() => handleAddToCart(product)}
+                    />
+                  ))}
+                </div>
+              )
             )}
           </main>
         </div>
       </div>
 
-      {filterOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setFilterOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 w-80 z-50 lg:hidden">
-            <FilterSidebar
-              tags={tags}
-              filters={filters}
-              onFilterChange={setFilters}
-              onClose={() => setFilterOpen(false)}
-              isMobile
-            />
-          </div>
-        </>
-      )}
 
-      <CartDrawer
-        isOpen={cartOpen}
-        onClose={() => setCartOpen(false)}
-        items={cartItems}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeFromCart}
-      />
 
       <ProductDetailModal
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
         product={selectedProduct}
-        onAddToCart={() => {
-          if (selectedProduct) {
-            handleAddToCart(selectedProduct.id);
-          }
-        }}
+        onAddToCart={() => selectedProduct && handleAddToCart(selectedProduct)}
       />
     </div>
   );
 }
-

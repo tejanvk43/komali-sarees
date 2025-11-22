@@ -18,7 +18,7 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
 
   if (!product) return null;
 
-  const images = product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : []);
+  const images = product.images && product.images.length > 0 ? product.images : [];
 
   const handleShare = async (platform: string) => {
     const url = window.location.href;
@@ -72,6 +72,16 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
               <Button variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-5 w-5" />
               </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-semibold min-w-[80px]">Color:</span>
+              <div className="flex items-center gap-2">
+                {/* Try to find a matching color tag if available in props, otherwise just show text */}
+                {/* In a real app, we'd pass the full tag object or fetch it. For now, we just show the name. */}
+                {/* If we had the hex, we'd show: <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: hex }} /> */}
+                <span>{product.color}</span>
+              </div>
             </div>
 
             <div className="flex items-baseline gap-4 mb-6">

@@ -6,15 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Tag } from '@/types';
-
-export interface FilterState {
-  colors: string[];
-  fabrics: string[];
-  occasions: string[];
-  styles: string[];
-  priceRange: [number, number];
-}
+import type { Tag, FilterState } from '@/types';
 
 interface FilterSidebarProps {
   tags: Tag[];
@@ -37,15 +29,21 @@ export function FilterSidebar({ tags, filters, onFilterChange, onClose, isMobile
   const fabricTags = tags.filter(t => t.category === 'fabric');
   const occasionTags = tags.filter(t => t.category === 'occasion');
   const styleTags = tags.filter(t => t.category === 'style');
+  const dressTypeTags = tags.filter(t => t.category === 'dressType'); // Added dressTypeTags
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const toggleFilter = (category: keyof Omit<FilterState, 'priceRange'>, value: string) => {
-    const current = filters[category];
+  // Modified toggleFilter to handle all categories including the new 'dressTypes'
+  const toggleFilter = (category: keyof FilterState, value: string) => {
+    if (category === 'priceRange') {
+      // Price range is handled by the Slider component directly
+      return;
+    }
+    const current = filters[category] as string[]; // Type assertion for array categories
     const updated = current.includes(value)
-      ? current.filter(v => v !== value)
+      ? current.filter(item => item !== value)
       : [...current, value];
     
     onFilterChange({ ...filters, [category]: updated });
@@ -57,6 +55,7 @@ export function FilterSidebar({ tags, filters, onFilterChange, onClose, isMobile
       fabrics: [],
       occasions: [],
       styles: [],
+      dressTypes: [], // Added dressTypes to clear
       priceRange: [0, 50000],
     });
   };
