@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
-import type { ProductWithTags } from '@shared/schema';
+import type { ProductWithTags } from '@/types';
 
 interface ProductCardProps {
   product: ProductWithTags;

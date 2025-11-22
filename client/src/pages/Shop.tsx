@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HeroCarousel } from '@/components/HeroCarousel';
@@ -9,21 +8,17 @@ import { FilterSidebar, type FilterState } from '@/components/FilterSidebar';
 import { CartDrawer } from '@/components/CartDrawer';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import type { ProductWithTags, Tag, CartItemWithProduct } from '@shared/schema';
+import { products, tags } from '@/data/products';
+import { useCart } from '@/hooks/use-cart';
+import type { ProductWithTags } from '@/types';
 
 export default function Shop() {
   const { toast } = useToast();
   const [cartOpen, setCartOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductWithTags | null>(null);
-  const [sessionId] = useState(() => {
-    const existing = localStorage.getItem('sessionId');
-    if (existing) return existing;
-    const newId = crypto.randomUUID();
-    localStorage.setItem('sessionId', newId);
-    return newId;
-  });
+  
+  const { items: cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
 
   const [filters, setFilters] = useState<FilterState>({
     colors: [],
@@ -33,49 +28,13 @@ export default function Shop() {
     priceRange: [0, 50000],
   });
 
-  const { data: products = [] } = useQuery<ProductWithTags[]>({
-    queryKey: ['/api/products/with-tags'],
-  });
-
-  const { data: tags = [] } = useQuery<Tag[]>({
-    queryKey: ['/api/tags'],
-  });
-
-  const { data: cartItems = [] } = useQuery<CartItemWithProduct[]>({
-    queryKey: ['/api/cart', sessionId],
-  });
-
-  const addToCartMutation = useMutation({
-    mutationFn: (productId: string) =>
-      apiRequest('POST', '/api/cart', { sessionId, productId, quantity: 1 }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart', sessionId] });
-      toast({
-        title: 'Added to cart',
-        description: 'Product has been added to your cart',
-      });
-    },
-  });
-
-  const updateCartMutation = useMutation({
-    mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) =>
-      apiRequest('PATCH', `/api/cart/${itemId}`, { quantity }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart', sessionId] });
-    },
-  });
-
-  const removeCartMutation = useMutation({
-    mutationFn: (itemId: string) =>
-      apiRequest('DELETE', `/api/cart/${itemId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart', sessionId] });
-      toast({
-        title: 'Removed from cart',
-        description: 'Product has been removed from your cart',
-      });
-    },
-  });
+  const handleAddToCart = (productId: string) => {
+    addToCart(productId);
+    toast({
+      title: 'Added to cart',
+      description: 'Product has been added to your cart',
+    });
+  };
 
   const filteredProducts = products.filter((product) => {
     const price = parseFloat(product.price);
@@ -107,9 +66,8 @@ export default function Shop() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation
-        cartItemCount={cartItems.length}
+        cartItemCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
         onCartClick={() => setCartOpen(true)}
-        onAdminClick={() => window.location.href = '/admin'}
       />
 
       <HeroCarousel />
@@ -177,7 +135,7 @@ export default function Shop() {
                     key={product.id}
                     product={product}
                     onClick={() => setSelectedProduct(product)}
-                    onAddToCart={() => addToCartMutation.mutate(product.id)}
+                    onAddToCart={() => handleAddToCart(product.id)}
                   />
                 ))}
               </div>
@@ -208,8 +166,8 @@ export default function Shop() {
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}
         items={cartItems}
-        onUpdateQuantity={(itemId, quantity) => updateCartMutation.mutate({ itemId, quantity })}
-        onRemoveItem={(itemId) => removeCartMutation.mutate(itemId)}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
       />
 
       <ProductDetailModal
@@ -218,10 +176,11 @@ export default function Shop() {
         product={selectedProduct}
         onAddToCart={() => {
           if (selectedProduct) {
-            addToCartMutation.mutate(selectedProduct.id);
+            handleAddToCart(selectedProduct.id);
           }
         }}
       />
     </div>
   );
 }
+

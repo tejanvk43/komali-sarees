@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShoppingCart, Menu, X, Search, User } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +8,9 @@ import { Link } from 'wouter';
 interface NavigationProps {
   cartItemCount: number;
   onCartClick: () => void;
-  onAdminClick: () => void;
 }
 
-export function Navigation({ cartItemCount, onCartClick, onAdminClick }: NavigationProps) {
+export function Navigation({ cartItemCount, onCartClick }: NavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -20,9 +19,9 @@ export function Navigation({ cartItemCount, onCartClick, onAdminClick }: Navigat
         <div className="flex items-center justify-between h-16 md:h-20">
           <div className="flex items-center gap-8">
             <Link href="/">
-              <button className="font-serif text-2xl md:text-3xl font-bold text-primary" data-testid="link-logo">
-                Elegant Sarees
-              </button>
+              <span className="font-serif text-2xl font-bold text-primary" data-testid="link-logo">
+                Komali Sarees
+              </span>
             </Link>
             
             <div className="hidden md:flex items-center gap-6">
@@ -53,16 +52,6 @@ export function Navigation({ cartItemCount, onCartClick, onAdminClick }: Navigat
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="hidden md:flex"
-              onClick={onAdminClick}
-              data-testid="button-admin"
-            >
-              <User className="h-5 w-5" />
-            </Button>
-            
             <Button
               size="icon"
               variant="ghost"
@@ -118,16 +107,10 @@ export function Navigation({ cartItemCount, onCartClick, onAdminClick }: Navigat
             <button className="block w-full text-left px-3 py-2 hover-elevate rounded-md" data-testid="link-mobile-about">
               About
             </button>
-            <button
-              className="block w-full text-left px-3 py-2 hover-elevate rounded-md"
-              onClick={onAdminClick}
-              data-testid="link-mobile-admin"
-            >
-              Admin Panel
-            </button>
           </div>
         </div>
       )}
     </nav>
   );
 }
+

@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Tag } from '@shared/schema';
+import type { Tag } from '@/types';
 
 export interface FilterState {
   colors: string[];

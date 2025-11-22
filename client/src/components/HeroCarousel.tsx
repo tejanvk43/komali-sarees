@@ -89,21 +89,21 @@ export function HeroCarousel() {
       <Button
         size="icon"
         variant="ghost"
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md border border-white/20 text-white hover-elevate active-elevate-2"
+        className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/20 hover:bg-black/40 text-white border border-white/20 backdrop-blur-sm transition-colors"
         onClick={prevSlide}
         data-testid="button-hero-prev"
       >
-        <ChevronLeft className="h-6 w-6" />
+        <ChevronLeft className="h-8 w-8" />
       </Button>
 
       <Button
         size="icon"
         variant="ghost"
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md border border-white/20 text-white hover-elevate active-elevate-2"
+        className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/20 hover:bg-black/40 text-white border border-white/20 backdrop-blur-sm transition-colors"
         onClick={nextSlide}
         data-testid="button-hero-next"
       >
-        <ChevronRight className="h-6 w-6" />
+        <ChevronRight className="h-8 w-8" />
       </Button>
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
