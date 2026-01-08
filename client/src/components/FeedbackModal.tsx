@@ -3,22 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, MessageSquare, Send } from "lucide-react";
-import { db } from "@/firebase/client";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
-
-interface FeedbackModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [rating, setRating] = useState(0);
-  const [suggestion, setSuggestion] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+import { submitFeedback } from "@/utils/firestore";
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -28,13 +13,12 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
     setIsSubmitting(true);
     try {
-      await addDoc(collection(db, "feedback"), {
+      await submitFeedback({
         userId: user?.uid || "anonymous",
         userName: user?.displayName || "Anonymous",
         userEmail: user?.email || "N/A",
         rating,
-        suggestion,
-        createdAt: serverTimestamp(),
+        suggestion: suggestion || ""
       });
 
       toast({ title: "Thank you for your feedback!" });

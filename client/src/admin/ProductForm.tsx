@@ -1,14 +1,8 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { Product, Tag } from "@/types";
-import { saveProduct } from "@/utils/firestore";
-import { uploadFileWithProgress, deleteFileFromUrl } from "@/utils/storage";
-import { db } from "@/firebase/client";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Upload, GripVertical, Trash2 } from "lucide-react";
+import { Upload, GripVertical, Trash2 } from "lucide-react";
+import { uploadFileWithProgress, deleteFileFromUrl } from "@/utils/storage";
+import { saveProduct, getTags } from "@/utils/firestore";
 
 export function ProductForm({ initialData, onSuccess }: { initialData?: Product, onSuccess: () => void }) {
   const { register, handleSubmit, setValue, watch } = useForm<Product>({ 
@@ -26,9 +20,12 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
 
   useEffect(() => {
     const fetchTags = async () => {
-      const q = query(collection(db, "tags"), orderBy("name"));
-      const snapshot = await getDocs(q);
-      setAvailableTags(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tag[]);
+      try {
+        const fetchedTags = await getTags();
+        setAvailableTags(fetchedTags);
+      } catch (e) {
+        console.error("Error fetching tags in ProductForm", e);
+      }
     };
     fetchTags();
   }, []);
@@ -88,9 +85,7 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
     const urlToRemove = currentImages[indexToRemove];
     if (confirm("Delete this image? This cannot be undone.")) {
       try {
-        if (urlToRemove.includes("firebasestorage")) {
-          await deleteFileFromUrl(urlToRemove);
-        }
+        await deleteFileFromUrl(urlToRemove);
         setValue("images", currentImages.filter((_, index) => index !== indexToRemove));
       } catch (e) {
         console.error("Failed to delete image from storage", e);

@@ -1,22 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { doc, getDoc, updateDoc, collection, query, where, orderBy, getDocs } from "firebase/firestore";
-import { db } from "@/firebase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { User, Mail, Calendar, Settings, LogOut, Package, MessageSquare } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { ScrollReveal } from "@/components/ScrollReveal";
-import { FeedbackModal } from "@/components/FeedbackModal";
-import { useRef } from "react";
-
-interface UserProfile {
-  name: string;
-  email: string;
-  createdAt?: any;
-}
+import { getUserProfile, updateUserProfile, getUserOrders } from "@/utils/firestore";
 
 export default function Profile() {
   const { user, logout, loading } = useAuth();
@@ -36,40 +21,25 @@ export default function Profile() {
   }, [user, loading, setLocation]);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       if (user) {
-        // Fetch Profile
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data() as UserProfile;
-          setProfile(data);
-          setNewName(data.name);
-        }
-
-        // Fetch Orders
         try {
-          const ordersQ = query(
-            collection(db, "orders"), 
-            where("userId", "==", user.uid)
-          );
-          const ordersSnap = await getDocs(ordersQ);
-          const ordersData = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-          
-          // Sort client-side to avoid needing a composite index in Firestore
-          ordersData.sort((a: any, b: any) => {
-            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : 0;
-            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : 0;
-            return dateB - dateA;
-          });
-          
+          // Fetch Profile
+          const userProfile = await getUserProfile(user.uid);
+          if (userProfile) {
+            setProfile(userProfile);
+            setNewName(userProfile.name);
+          }
+
+          // Fetch Orders
+          const ordersData = await getUserOrders(user.uid);
           setOrders(ordersData);
         } catch (err) {
-          console.error("Error fetching orders:", err);
+          console.error("Error fetching user data:", err);
         }
       }
     };
-    fetchProfile();
+    fetchData();
   }, [user]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -77,8 +47,10 @@ export default function Profile() {
     if (!user) return;
 
     try {
-      await updateDoc(doc(db, "users", user.uid), {
-        name: newName
+      await updateUserProfile({
+        id: user.uid,
+        name: newName,
+        email: user.email || ""
       });
       setProfile(prev => prev ? { ...prev, name: newName } : null);
       setIsEditing(false);

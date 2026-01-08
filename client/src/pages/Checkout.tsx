@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { useLocation } from "wouter";
-import { db } from "@/firebase/client";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { placeOrder } from "@/utils/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,10 +67,9 @@ export default function Checkout() {
         })),
         totalAmount: subtotal,
         status: 'pending',
-        createdAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, "orders"), orderData);
+      await placeOrder(orderData);
       
       // Clear cart
       items.forEach(item => removeFromCart(item.id));

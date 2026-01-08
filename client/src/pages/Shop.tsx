@@ -12,8 +12,7 @@ import { Tag } from "@/types";
 import { useCart } from "@/hooks/use-cart";
 import type { ProductWithTags, FilterState } from "@/types";
 
-import { db } from "@/firebase/client";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { getAllProducts, getTags } from "@/utils/firestore";
 
 export default function Shop() {
   const { toast } = useToast();
@@ -26,21 +25,24 @@ export default function Shop() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Tags
-        const tagsQuery = query(collection(db, "tags"), orderBy("name"));
-        const tagsSnapshot = await getDocs(tagsQuery);
-        const fetchedTags = tagsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tag[];
+        setLoading(true);
+        // Fetch Tags and Products in parallel
+        const [fetchedTags, productsData] = await Promise.all([
+          getTags(),
+          getAllProducts()
+        ]);
+        
         setTags(fetchedTags);
 
-        // Fetch Products
-        const productsData = await getAllProducts();
-        
         // Enrich products with tag objects based on their string attributes
-        const enrichedProducts = productsData.map(p => {
+        const productList = Array.isArray(productsData) ? productsData : [];
+        const tagList = Array.isArray(fetchedTags) ? fetchedTags : [];
+
+        const enrichedProducts = productList.map(p => {
           const productTags: Tag[] = [];
           
           // Find matching tags for the product's attributes
-          const colorTag = fetchedTags.find(t => t.category === 'color' && t.name === p.color);
+          const colorTag = tagList.find(t => t.category === 'color' && t.name === p.color);
           if (colorTag) productTags.push(colorTag);
 
           const fabricTag = fetchedTags.find(t => t.category === 'fabric' && t.name === p.fabric);

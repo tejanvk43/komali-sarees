@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { auth, db } from "@/firebase/client";
+import { auth } from "@/firebase/client";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { useLocation } from "wouter";
+import { isAdmin } from "@/utils/firestore";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -18,8 +18,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-            const adminDoc = await getDoc(doc(db, "admins", user.uid));
-            if (adminDoc.exists()) {
+            const isUserAdmin = await isAdmin(user.uid);
+            if (isUserAdmin) {
               setAuthorized(true);
             } else {
               setAuthorized(false);

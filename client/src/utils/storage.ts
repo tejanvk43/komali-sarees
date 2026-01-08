@@ -1,5 +1,4 @@
-import { storage } from "@/firebase/client";
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+const API_BASE = "/api/storage";
 
 export interface UploadProgress {
     progress: number;
@@ -13,33 +12,42 @@ export const uploadFileWithProgress = (
     path: string,
     onProgress: (status: UploadProgress) => void
 ) => {
-    const storageRef = ref(storage, path);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    // Note: Fetch doesn't natively support progress tracking like XHR or Firebase SDK
+    // For a simple migration, we'll simulate progress or just trigger on success
+    onProgress({ progress: 10, state: 'running' });
 
-    uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            onProgress({ progress, state: snapshot.state });
-        },
-        (error) => {
-            onProgress({ progress: 0, error: error.message, state: 'error' });
-        },
-        async () => {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            onProgress({ progress: 100, downloadURL, state: 'success' });
-        }
-    );
+    fetch(`${API_BASE}?path=${encodeURIComponent(path)}`, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file
+    })
+        .then(async (res) => {
+            if (!res.ok) throw new Error("Upload failed");
+            const data = await res.json();
+            onProgress({ progress: 100, downloadURL: data.url, state: 'success' });
+        })
+        .catch((err) => {
+            onProgress({ progress: 0, error: err.message, state: 'error' });
+        });
 
-    return uploadTask; // Returns task to allow canceling
+    return { cancel: () => { } }; // Dummy task for compatibility
 };
 
 export const deleteFileFromUrl = async (url: string) => {
-    try {
-        const storageRef = ref(storage, url);
-        await deleteObject(storageRef);
-    } catch (error) {
-        console.error("Error deleting file:", error);
-        throw error;
+    let path = "";
+    if (url.includes("?path=")) {
+        const urlObj = new URL(url, window.location.origin);
+        path = urlObj.searchParams.get("path") || "";
+    } else {
+        // Fallback for old URL formats if any
+        path = url.split('/').pop() || "";
+        if (!path.startsWith("products/")) path = `products/${path}`;
     }
+
+    if (!path) throw new Error("Could not extract path from URL");
+
+    const response = await fetch(`${API_BASE}?path=${encodeURIComponent(path)}`, {
+        method: "DELETE"
+    });
+    if (!response.ok) throw new Error("Failed to delete file");
 };

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { auth, db } from "@/firebase/client";
+import { auth } from "@/firebase/client";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { isAdmin } from "@/utils/firestore";
 
 export function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -21,8 +21,8 @@ export function AdminLogin() {
       const user = userCredential.user;
       
       // Verify admin status
-      const adminDoc = await getDoc(doc(db, "admins", user.uid));
-      if (adminDoc.exists()) {
+      const isUserAdmin = await isAdmin(user.uid);
+      if (isUserAdmin) {
         setLocation("/admin");
       } else {
         setError("Access Denied: You are not an admin.");

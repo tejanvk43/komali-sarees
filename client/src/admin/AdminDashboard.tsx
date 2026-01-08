@@ -126,7 +126,7 @@ export function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredProducts.map((product) => (
+                  {(Array.isArray(filteredProducts) ? filteredProducts : []).map((product) => (
                     <tr key={product.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <img src={product.images?.[0] || 'placeholder.jpg'} alt="" className="h-10 w-10 rounded object-cover bg-gray-100" />
@@ -192,37 +192,40 @@ export function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {orders.map((order) => (
-                    <tr key={order.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : 'Just now'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium">{order.customerName}</div>
-                        <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-medium text-sm">₹{order.totalAmount?.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Button variant="ghost" size="sm" onClick={async () => {
-                           if(confirm('Mark as completed?')) {
-                             await updateOrderStatus(order.id, 'completed');
-                             loadOrders();
-                           }
-                        }}>
-                          <CheckCircle className="h-4 w-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {(Array.isArray(orders) ? orders : []).map((order) => {
+                    const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+                    return (
+                      <tr key={order.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {date.toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium">{order.customerName}</div>
+                          <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap font-medium text-sm">₹{order.totalAmount?.toLocaleString()}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                            order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Button variant="ghost" size="sm" onClick={async () => {
+                             if(confirm('Mark as completed?')) {
+                               await updateOrderStatus(order.id, 'completed');
+                               loadOrders();
+                             }
+                          }}>
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -282,12 +285,11 @@ export function AdminDashboard() {
                    const salesByDay = new Array(7).fill(0);
                    
                    // Group orders by day of week
-                   orders.forEach(order => {
-                     if (order.createdAt?.toDate) {
-                       const date = order.createdAt.toDate();
-                       const dayIndex = date.getDay();
-                       salesByDay[dayIndex] += order.totalAmount || 0;
-                     }
+                   const orderList = Array.isArray(orders) ? orders : [];
+                   orderList.forEach(order => {
+                     const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+                     const dayIndex = date.getDay();
+                     salesByDay[dayIndex] += order.totalAmount || 0;
                    });
 
                    const maxSales = Math.max(...salesByDay, 1000); // Avoid division by zero
@@ -331,37 +333,40 @@ export function AdminDashboard() {
               <Button variant="outline" onClick={loadFeedback}>Refresh</Button>
             </div>
             <div className="grid gap-4">
-              {feedback.map((f) => (
-                <Card key={f.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`h-4 w-4 ${
-                              star <= f.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-200"
-                            }`}
-                          />
-                        ))}
+              {(Array.isArray(feedback) ? feedback : []).map((f) => {
+                const date = f.createdAt?.toDate ? f.createdAt.toDate() : new Date(f.createdAt);
+                return (
+                  <Card key={f.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-4 w-4 ${
+                                star <= f.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground italic">
+                          {date.toLocaleString()}
+                        </span>
                       </div>
-                      <span className="text-xs text-muted-foreground italic">
-                        {f.createdAt?.toDate ? f.createdAt.toDate().toLocaleString() : 'Just now'}
-                      </span>
-                    </div>
-                    <p className="text-gray-700 mb-4 font-serif italic">"{f.suggestion || 'No suggestion provided'}"</p>
-                    <div className="flex items-center gap-3 pt-4 border-t text-sm">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                        {f.userName?.[0]}
+                      <p className="text-gray-700 mb-4 font-serif italic">"{f.suggestion || 'No suggestion provided'}"</p>
+                      <div className="flex items-center gap-3 pt-4 border-t text-sm">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          {f.userName?.[0]}
+                        </div>
+                        <div>
+                          <p className="font-medium">{f.userName}</p>
+                          <p className="text-xs text-muted-foreground">{f.userEmail}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{f.userName}</p>
-                        <p className="text-xs text-muted-foreground">{f.userEmail}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
               {feedback.length === 0 && (
                 <div className="text-center py-20 bg-white rounded-lg border-2 border-dashed border-gray-200">
                   <MessageSquare className="h-12 w-12 text-gray-200 mx-auto mb-4" />

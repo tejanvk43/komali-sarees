@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { auth, db } from "@/firebase/client";
+import { auth } from "@/firebase/client";
+import { getUserProfile, updateUserProfile } from "@/utils/firestore";
 import { 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
@@ -9,7 +10,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { getUserProfile, updateUserProfile } from "@/utils/firestore";
 
 interface AuthContextType {
   user: User | null;
@@ -40,22 +41,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = async (email: string, pass: string, name: string) => {
     const res = await createUserWithEmailAndPassword(auth, email, pass);
-    await setDoc(doc(db, "users", res.user.uid), {
+    await updateUserProfile({
+      id: res.user.uid,
       name,
-      email,
-      createdAt: new Date(),
+      email
     });
   };
 
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     const res = await signInWithPopup(auth, provider);
-    const userDoc = await getDoc(doc(db, "users", res.user.uid));
-    if (!userDoc.exists()) {
-      await setDoc(doc(db, "users", res.user.uid), {
-        name: res.user.displayName,
-        email: res.user.email,
-        createdAt: new Date(),
+    const userProfile = await getUserProfile(res.user.uid);
+    if (!userProfile) {
+      await updateUserProfile({
+        id: res.user.uid,
+        name: res.user.displayName || "Elegant User",
+        email: res.user.email || ""
       });
     }
   };

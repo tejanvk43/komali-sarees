@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import { db } from "@/firebase/client";
-import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tag } from "@/types";
-import { Trash2, Plus } from "lucide-react";
+import { getTags, saveTag, deleteTag } from "@/utils/firestore";
 
 export function TagManager() {
   const [tags, setTags] = useState<Tag[]>([]);
@@ -20,9 +14,8 @@ export function TagManager() {
 
   const fetchTags = async () => {
     try {
-      const q = query(collection(db, "tags"), orderBy("name"));
-      const snapshot = await getDocs(q);
-      const fetchedTags = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tag[];
+      setLoading(true);
+      const fetchedTags = await getTags();
       setTags(fetchedTags);
     } catch (error) {
       console.error("Error fetching tags:", error);
@@ -39,11 +32,10 @@ export function TagManager() {
       const newTag = {
         name: newTagName,
         category: newTagCategory,
-        colorHex: newTagCategory === 'color' ? newTagColor : null,
-        createdAt: serverTimestamp()
+        colorHex: newTagCategory === 'color' ? newTagColor : null
       };
       
-      await addDoc(collection(db, "tags"), newTag);
+      await saveTag(newTag);
       setNewTagName("");
       fetchTags(); // Refresh list
     } catch (error) {
@@ -55,7 +47,7 @@ export function TagManager() {
   const handleDeleteTag = async (id: string) => {
     if (!confirm("Are you sure you want to delete this tag?")) return;
     try {
-      await deleteDoc(doc(db, "tags", id));
+      await deleteTag(id);
       setTags(tags.filter(t => t.id !== id));
     } catch (error) {
       console.error("Error deleting tag:", error);
