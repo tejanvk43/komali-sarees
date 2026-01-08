@@ -1,9 +1,10 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ProductWithTags } from "@/types";
-import { X, ShoppingCart, Share2, Link as LinkIcon } from "lucide-react";
+import { X, ShoppingCart, Share2, Link as LinkIcon, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { AITryOnModal } from "./AITryOnModal";
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface ProductDetailModalProps {
 
 export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: ProductDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [tryOnOpen, setTryOnOpen] = useState(false);
   const { toast } = useToast();
 
   if (!product) return null;
@@ -35,6 +37,10 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{product.name}</DialogTitle>
+          <DialogDescription>Product details and purchase options for {product.name}</DialogDescription>
+        </DialogHeader>
         <div className="grid md:grid-cols-2 h-[80vh] md:h-auto overflow-y-auto md:overflow-visible">
           
           <div className="relative bg-gray-100">
@@ -69,9 +75,6 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
                 <h2 className="text-2xl font-serif font-bold text-primary">{product.name}</h2>
                 <p className="text-muted-foreground mt-1">{product.fabric} • {product.occasion}</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-5 w-5" />
-              </Button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -103,6 +106,15 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
                 Add to Cart
               </Button>
 
+              <Button 
+                onClick={() => setTryOnOpen(true)} 
+                variant="outline" 
+                className="w-full h-12 text-lg gap-2 border-primary text-primary hover:bg-primary/5"
+              >
+                <Sparkles className="h-5 w-5" />
+                Try on with AI
+              </Button>
+
               <div className="flex items-center justify-center gap-4 pt-4 border-t">
                 <span className="text-sm text-muted-foreground">Share:</span>
                 <Button variant="ghost" size="icon" onClick={() => handleShare('whatsapp')} className="text-green-600">
@@ -115,6 +127,14 @@ export function ProductDetailModal({ isOpen, onClose, product, onAddToCart }: Pr
             </div>
           </div>
         </div>
+        
+        {product && (
+          <AITryOnModal 
+            isOpen={tryOnOpen} 
+            onClose={() => setTryOnOpen(false)} 
+            product={product} 
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

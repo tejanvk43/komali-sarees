@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import type { CartItemWithProduct } from '@/types';
+import { useLocation } from 'wouter';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: CartDrawerProps) {
+  const [, setLocation] = useLocation();
   const subtotal = items.reduce((sum, item) => {
     return sum + parseFloat(item.product.price) * item.quantity;
   }, 0);
@@ -152,7 +154,14 @@ export function CartDrawer({ isOpen, onClose, items, onUpdateQuantity, onRemoveI
                 </div>
 
                 <div className="space-y-2">
-                  <Button className="w-full h-12" data-testid="button-checkout">
+                  <Button 
+                    className="w-full h-12" 
+                    data-testid="button-checkout"
+                    onClick={() => {
+                      setLocation('/checkout');
+                      onClose();
+                    }}
+                  >
                     Proceed to Checkout
                   </Button>
                   <Button

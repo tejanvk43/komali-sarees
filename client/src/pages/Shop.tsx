@@ -122,14 +122,16 @@ export default function Shop() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <aside className={`
-            lg:w-64 flex-shrink-0
-            fixed lg:static inset-0 z-40 bg-background lg:bg-transparent
-            transform transition-transform duration-300 ease-in-out
-            ${filterOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            p-6 lg:p-0 overflow-y-auto lg:overflow-visible
-          `}>
+          <div className="flex flex-col lg:flex-row gap-8">
+            <aside className={`
+              lg:w-64 flex-shrink-0
+              fixed lg:sticky inset-y-0 lg:inset-y-auto left-0 lg:left-auto w-full lg:w-auto z-[60] lg:z-30 bg-background lg:bg-transparent
+              lg:top-24
+              transform transition-transform duration-300 ease-in-out
+              ${filterOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+              p-6 lg:p-0 overflow-y-auto lg:overflow-visible
+              max-h-screen lg:max-h-[calc(100vh-6rem)]
+            `}>
             <div className="flex justify-between items-center lg:hidden mb-6">
               <h2 className="text-xl font-bold">Filters</h2>
               <Button variant="ghost" size="icon" onClick={() => setFilterOpen(false)}>
@@ -138,7 +140,13 @@ export default function Shop() {
             </div>
             <FilterSidebar
               filters={filters}
-              onFilterChange={setFilters}
+              onFilterChange={(newFilters) => {
+                setFilters(newFilters);
+                // Auto‑close sidebar on mobile after applying filters
+                if (window.innerWidth < 1024) {
+                  setFilterOpen(false);
+                }
+              }}
               tags={tags}
             />
           </aside>

@@ -40,3 +40,33 @@ export async function updateProductImages(productId: string, images: string[]) {
     const docRef = doc(db, "products", productId);
     await updateDoc(docRef, { images });
 }
+
+export async function getOrders() {
+    if (!db) return [];
+    try {
+        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        return [];
+    }
+}
+
+export async function updateOrderStatus(orderId: string, status: string) {
+    if (!db) throw new Error("Firestore not initialized");
+    const docRef = doc(db, "orders", orderId);
+    await updateDoc(docRef, { status });
+}
+
+export async function getFeedback() {
+    if (!db) return [];
+    try {
+        const q = query(collection(db, "feedback"), orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Error fetching feedback:", error);
+        return [];
+    }
+}

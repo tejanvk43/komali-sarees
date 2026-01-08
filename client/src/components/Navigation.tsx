@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ShoppingCart, Menu, X, Search } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Link, useLocation } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
 
 interface NavigationProps {
   cartItemCount: number;
@@ -14,6 +15,7 @@ export function Navigation({ cartItemCount, onCartClick }: NavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useLocation();
+  const { user, logout } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,6 +157,23 @@ export function Navigation({ cartItemCount, onCartClick }: NavigationProps) {
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
+
+            {user ? (
+              <div className="flex items-center gap-2 ml-2">
+                <Button variant="ghost" size="icon" onClick={() => setLocation("/profile")} className="hidden md:flex">
+                  <UserIcon className="h-5 w-5" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => logout()} className="hidden md:flex">
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Link href="/auth">
+                <Button variant="ghost" size="sm" className="hidden md:flex ml-2">
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -208,6 +227,21 @@ export function Navigation({ cartItemCount, onCartClick }: NavigationProps) {
                 Contact
               </button>
             </Link>
+
+            {user ? (
+              <button 
+                className="block w-full text-left px-3 py-2 hover-elevate rounded-md text-red-600" 
+                onClick={() => { logout(); setMobileMenuOpen(false); }}
+              >
+                Logout
+              </button>
+            ) : (
+              <Link href="/auth">
+                <button className="block w-full text-left px-3 py-2 hover-elevate rounded-md text-primary font-bold" onClick={() => setMobileMenuOpen(false)}>
+                  Login / Sign Up
+                </button>
+              </Link>
+            )}
           </div>
         </div>
       )}

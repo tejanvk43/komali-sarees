@@ -4,10 +4,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Shop from "@/pages/Shop";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import AuthPage from "@/pages/Auth";
+import Profile from "@/pages/Profile";
+import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/not-found";
 import { AdminLogin } from "@/admin/AdminLogin";
 import { AdminDashboard } from "@/admin/AdminDashboard";
 import { AuthGuard } from "@/admin/AuthGuard";
+import { AuthProvider } from "@/hooks/use-auth";
 import { CartProvider, useCart } from "@/hooks/use-cart";
 import { Navigation } from "@/components/Navigation";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -60,6 +65,26 @@ function Router() {
           <About />
         </PublicLayout>
       </Route>
+      <Route path="/contact">
+        <PublicLayout>
+          <Contact />
+        </PublicLayout>
+      </Route>
+      <Route path="/auth">
+        <PublicLayout>
+          <AuthPage />
+        </PublicLayout>
+      </Route>
+      <Route path="/profile">
+        <PublicLayout>
+          <Profile />
+        </PublicLayout>
+      </Route>
+      <Route path="/checkout">
+        <PublicLayout>
+          <Checkout />
+        </PublicLayout>
+      </Route>
       
       {/* Admin Routes */}
       <Route path="/admin/login">
@@ -90,9 +115,11 @@ function App() {
     <TooltipProvider>
       <PageLoader />
       <Toaster />
-      <CartProvider>
-        <Router />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Router />
+        </CartProvider>
+      </AuthProvider>
     </TooltipProvider>
   );
 }
