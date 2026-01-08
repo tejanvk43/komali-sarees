@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProductForm } from "./ProductForm";
 import { TagManager } from "./TagManager";
-import { Plus, Search, Edit, Trash2, LogOut, ShoppingBag, BarChart3, Package, DollarSign, Clock, CheckCircle, Star } from "lucide-react";
+import { 
+  Plus, Search, Edit, Trash2, LogOut, 
+  ShoppingBag, BarChart3, Package, 
+  DollarSign, Clock, CheckCircle, 
+  Star, MessageSquare 
+} from "lucide-react";
 import { auth } from "@/firebase/client";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
