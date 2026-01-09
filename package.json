@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "tsc",
-    "deploy": "wrangler pages deploy client/dist"
+    "deploy": "wrangler pages deploy dist"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.937.0",
