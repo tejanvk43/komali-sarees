@@ -19,6 +19,12 @@ export default defineConfig({
         emptyOutDir: true,
     },
     server: {
+        proxy: {
+            "/api": {
+                target: "http://127.0.0.1:8788",
+                changeOrigin: true,
+            },
+        },
         fs: {
             strict: true,
             deny: ["**/.*"],

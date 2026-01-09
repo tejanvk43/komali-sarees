@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// ../.wrangler/tmp/bundle-Uz2bcV/checked-fetch.js
+// ../.wrangler/tmp/bundle-KzfSq5/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
@@ -33,14 +33,21 @@ var onRequest = /* @__PURE__ */ __name(async (context) => {
   const url = new URL(request.url);
   if (request.method === "GET") {
     try {
-      const uid = url.searchParams.get("uid");
-      if (!uid) return new Response("Missing uid", { status: 400 });
+      const uid = url.searchParams.get("id");
+      if (!uid) return new Response("Missing id", { status: 400 });
       const admin = await env.DB.prepare("SELECT * FROM admins WHERE uid = ?").bind(uid).first();
-      return new Response(JSON.stringify(admin || null), {
+      return new Response(JSON.stringify({ isAdmin: !!admin }), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+      return new Response(JSON.stringify({
+        error: e.message,
+        stack: e.stack,
+        envKeys: Object.keys(env)
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
   return new Response("Method not allowed", { status: 405 });
@@ -181,8 +188,14 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
-      console.error("D1 Query Error (GET /api/products):", e.message);
-      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+      return new Response(JSON.stringify({
+        error: e.message,
+        stack: e.stack,
+        envKeys: Object.keys(env)
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
   if (request.method === "POST") {
@@ -220,7 +233,14 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+      return new Response(JSON.stringify({
+        error: e.message,
+        stack: e.stack,
+        envKeys: Object.keys(env)
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
   if (request.method === "DELETE") {
@@ -230,7 +250,14 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
       await env.DB.prepare("DELETE FROM products WHERE id = ?").bind(id).run();
       return new Response(JSON.stringify({ success: true }));
     } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+      return new Response(JSON.stringify({
+        error: e.message,
+        stack: e.stack,
+        envKeys: Object.keys(env)
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
   return new Response("Method not allowed", { status: 405 });
@@ -294,17 +321,32 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+      return new Response(JSON.stringify({
+        error: e.message,
+        stack: e.stack,
+        envKeys: Object.keys(env)
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
   if (request.method === "POST") {
     try {
       const data = await request.json();
-      const { id, name, category } = data;
-      await env.DB.prepare("INSERT INTO tags (id, name, category) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, category=excluded.category").bind(id, name, category).run();
-      return new Response(JSON.stringify({ success: true }));
+      const id = data.id || crypto.randomUUID();
+      const { name, category, colorHex } = data;
+      await env.DB.prepare("INSERT INTO tags (id, name, category, colorHex) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, category=excluded.category, colorHex=excluded.colorHex").bind(id, name, category, colorHex || null).run();
+      return new Response(JSON.stringify({ success: true, id }));
     } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+      return new Response(JSON.stringify({
+        error: e.message,
+        stack: e.stack,
+        envKeys: Object.keys(env)
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
   return new Response("Method not allowed", { status: 405 });
@@ -345,7 +387,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   return new Response("Method not allowed", { status: 405 });
 }, "onRequest");
 
-// ../.wrangler/tmp/pages-OTVPuG/functionsRoutes-0.7029779404907615.mjs
+// ../.wrangler/tmp/pages-nKQ0Or/functionsRoutes-0.1672492110217132.mjs
 var routes = [
   {
     routePath: "/api/admins",
@@ -885,7 +927,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-Uz2bcV/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-KzfSq5/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -917,7 +959,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-Uz2bcV/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-KzfSq5/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
@@ -1017,4 +1059,4 @@ export {
   __INTERNAL_WRANGLER_MIDDLEWARE__,
   middleware_loader_entry_default as default
 };
-//# sourceMappingURL=functionsWorker-0.1489036720692083.mjs.map
+//# sourceMappingURL=functionsWorker-0.4039840006092539.mjs.map

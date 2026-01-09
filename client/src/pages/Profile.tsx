@@ -1,6 +1,20 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { UserProfile } from "@/types";
+import { 
+  Card, CardContent, CardHeader, 
+  CardTitle, CardDescription 
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { FeedbackModal } from "@/components/FeedbackModal";
+import { 
+  User, Package, MessageSquare, 
+  Settings, LogOut, Mail, Calendar 
+} from "lucide-react";
 import { getUserProfile, updateUserProfile, getUserOrders } from "@/utils/firestore";
 
 export default function Profile() {
@@ -147,7 +161,7 @@ export default function Profile() {
                         <div>
                           <p className="text-xs uppercase tracking-wider text-muted-foreground">Member Since</p>
                           <p className="font-medium">
-                            {profile?.createdAt?.toDate ? profile.createdAt.toDate().toLocaleDateString() : "Present"}
+                            {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "Present"}
                           </p>
                         </div>
                       </div>
@@ -166,7 +180,7 @@ export default function Profile() {
                     <div className="text-center py-12">
                       <Package className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
                       <p className="text-muted-foreground italic">You haven't placed any orders yet. Time for some saree shopping!</p>
-                      <Button variant="link" className="mt-4" onClick={() => setLocation("/products")}>
+                      <Button variant="ghost" className="mt-4" onClick={() => setLocation("/products")}>
                         Browse Collection
                       </Button>
                     </div>

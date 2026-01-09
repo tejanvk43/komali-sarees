@@ -12,19 +12,35 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 headers: { "Content-Type": "application/json" }
             });
         } catch (e: any) {
-            return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+            return new Response(JSON.stringify({
+                error: e.message,
+                stack: e.stack,
+                envKeys: Object.keys(env)
+            }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
         }
     }
 
     if (request.method === "POST") {
         try {
             const data: any = await request.json();
-            const { id, name, category } = data;
-            await env.DB.prepare("INSERT INTO tags (id, name, category) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, category=excluded.category")
-                .bind(id, name, category).run();
-            return new Response(JSON.stringify({ success: true }));
+            const id = data.id || crypto.randomUUID();
+            const { name, category, colorHex } = data;
+
+            await env.DB.prepare("INSERT INTO tags (id, name, category, colorHex) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, category=excluded.category, colorHex=excluded.colorHex")
+                .bind(id, name, category, colorHex || null).run();
+            return new Response(JSON.stringify({ success: true, id }));
         } catch (e: any) {
-            return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+            return new Response(JSON.stringify({
+                error: e.message,
+                stack: e.stack,
+                envKeys: Object.keys(env)
+            }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
         }
     }
 

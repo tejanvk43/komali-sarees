@@ -39,7 +39,7 @@ export default function Checkout() {
     }
   }, [user, authLoading, setLocation]);
 
-  const subtotal = items.reduce((sum, item) => sum + parseFloat(item.product.price) * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,7 +196,7 @@ export default function Checkout() {
                         <p className="font-medium truncate">{item.product.name}</p>
                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-semibold">₹{(parseFloat(item.product.price) * item.quantity).toLocaleString()}</p>
+                      <p className="font-semibold">₹{(Number(item.product.price) * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                   {items.length === 0 && <p className="text-center text-muted-foreground py-8 italic">Your cart is empty</p>}

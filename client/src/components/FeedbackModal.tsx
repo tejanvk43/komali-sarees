@@ -4,6 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, MessageSquare, Send } from "lucide-react";
 import { submitFeedback } from "@/utils/firestore";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+
+export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [rating, setRating] = useState(0);
+  const [suggestion, setSuggestion] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (rating === 0) {

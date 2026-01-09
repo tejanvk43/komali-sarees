@@ -30,8 +30,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 headers: { "Content-Type": "application/json" }
             });
         } catch (e: any) {
-            console.error("D1 Query Error (GET /api/products):", e.message);
-            return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+            return new Response(JSON.stringify({
+                error: e.message,
+                stack: e.stack,
+                envKeys: Object.keys(env)
+            }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
         }
     }
 
@@ -64,7 +70,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                 headers: { "Content-Type": "application/json" }
             });
         } catch (e: any) {
-            return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+            return new Response(JSON.stringify({
+                error: e.message,
+                stack: e.stack,
+                envKeys: Object.keys(env)
+            }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
         }
     }
 
@@ -75,7 +88,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             await env.DB.prepare("DELETE FROM products WHERE id = ?").bind(id).run();
             return new Response(JSON.stringify({ success: true }));
         } catch (e: any) {
-            return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+            return new Response(JSON.stringify({
+                error: e.message,
+                stack: e.stack,
+                envKeys: Object.keys(env)
+            }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
         }
     }
 

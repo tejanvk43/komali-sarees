@@ -125,3 +125,23 @@ export async function getFeedback(): Promise<any[]> {
         return [];
     }
 }
+
+export async function submitFeedback(feedback: any): Promise<void> {
+    const response = await fetch(`${API_BASE}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(feedback)
+    });
+    if (!response.ok) throw new Error("Failed to submit feedback");
+}
+
+export async function isAdmin(uid: string): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE}/admins?id=${uid}`);
+        if (!response.ok) return false;
+        const data = await response.json();
+        return !!data?.isAdmin;
+    } catch {
+        return false;
+    }
+}

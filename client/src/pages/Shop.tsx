@@ -7,7 +7,6 @@ import { useSearch } from "wouter";
 
 import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { useToast } from "@/hooks/use-toast";
-import { getAllProducts } from "@/utils/firestore";
 import { Tag } from "@/types";
 import { useCart } from "@/hooks/use-cart";
 import type { ProductWithTags, FilterState } from "@/types";

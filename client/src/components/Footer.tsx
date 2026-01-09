@@ -31,7 +31,7 @@ export function Footer() {
               </div>
               <div className="space-y-4">
                 <p className="text-sm leading-relaxed">
-                  About Us: Harish's Silk Saree House || 9966888613 || Started in 2015 is a unique blend of shopping and customisation. We have pioneered in that form of...{' '}
+                  About Us: Harish's Silk Saree House || 9966888618 || Started in 2015 is a unique blend of shopping and customisation. We have pioneered in that form of...{' '}
                   <button 
                     onClick={() => setShowAboutModal(true)}
                     className="text-orange-500 cursor-pointer hover:underline font-medium"
@@ -113,7 +113,7 @@ export function Footer() {
               <p className="text-sm mb-3">Spread the word:</p>
               <div className="flex gap-4">
                 <a 
-                  href="https://wa.me/919966888613" 
+                  href="https://wa.me/919966888618" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-green-500 transition-colors"

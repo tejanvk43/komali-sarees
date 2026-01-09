@@ -7,7 +7,7 @@
 const GEMINI_CONFIG = {
     API_KEY: import.meta.env.VITE_GEMINI_API_KEY || "",
     API_VERSION: "v1",
-    MODEL_NAME: "gemini-2.5-flash-image", // Switched to stable gemini-pro as per requirement
+    MODEL_NAME: import.meta.env.VITE_GEMINI_MODEL || "gemini-3-pro-image",
     BASE_URL: "https://generativelanguage.googleapis.com"
 };
 

@@ -16,7 +16,7 @@ interface CartDrawerProps {
 export function CartDrawer({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: CartDrawerProps) {
   const [, setLocation] = useLocation();
   const subtotal = items.reduce((sum, item) => {
-    return sum + parseFloat(item.product.price) * item.quantity;
+    return sum + Number(item.product.price) * item.quantity;
   }, 0);
 
   return (
@@ -89,7 +89,7 @@ export function CartDrawer({ isOpen, onClose, items, onUpdateQuantity, onRemoveI
                           {item.product.fabric}
                         </p>
                         <p className="font-semibold">
-                          ₹{parseFloat(item.product.price).toLocaleString('en-IN')}
+                          ₹{Number(item.product.price).toLocaleString('en-IN')}
                         </p>
                       </div>
 

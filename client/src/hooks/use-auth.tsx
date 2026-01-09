@@ -10,7 +10,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from "firebase/auth";
-import { getUserProfile, updateUserProfile } from "@/utils/firestore";
 
 interface AuthContextType {
   user: User | null;

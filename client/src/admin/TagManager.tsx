@@ -1,4 +1,9 @@
 import { useState, useEffect } from "react";
+import { Tag } from "@/types";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Plus, Trash2 } from "lucide-react";
 import { getTags, saveTag, deleteTag } from "@/utils/firestore";
 
 export function TagManager() {

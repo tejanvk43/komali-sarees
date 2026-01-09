@@ -8,15 +8,22 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     if (request.method === "GET") {
         try {
-            const uid = url.searchParams.get("uid");
-            if (!uid) return new Response("Missing uid", { status: 400 });
+            const uid = url.searchParams.get("id");
+            if (!uid) return new Response("Missing id", { status: 400 });
 
             const admin = await env.DB.prepare("SELECT * FROM admins WHERE uid = ?").bind(uid).first();
-            return new Response(JSON.stringify(admin || null), {
+            return new Response(JSON.stringify({ isAdmin: !!admin }), {
                 headers: { "Content-Type": "application/json" }
             });
         } catch (e: any) {
-            return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+            return new Response(JSON.stringify({
+                error: e.message,
+                stack: e.stack,
+                envKeys: Object.keys(env)
+            }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
         }
     }
 
