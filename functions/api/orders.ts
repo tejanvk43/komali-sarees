@@ -1,70 +1,116 @@
-export async function onRequest(context: { request: Request, env: any }) {
+interface Env {
+    DB: D1Database;
+}
+
+const ensureOrdersTable = async (db: D1Database) => {
+    await db.prepare(`
+        CREATE TABLE IF NOT EXISTS orders (
+            id TEXT PRIMARY KEY,
+            userId TEXT,
+            customerName TEXT,
+            customerEmail TEXT,
+            customerPhone TEXT,
+            shippingAddress TEXT,
+            customization TEXT,
+            items TEXT,
+            totalAmount REAL,
+            status TEXT DEFAULT 'pending',
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `).run();
+};
+
+export const onRequest: PagesFunction<Env> = async (context) => {
     const { request, env } = context;
     const url = new URL(request.url);
 
     try {
+        if (!env.DB) {
+            console.warn("D1 DB binding missing in orders.");
+            return new Response(JSON.stringify([]), { headers: { "Content-Type": "application/json" } });
+        }
+
         if (request.method === "GET") {
-            if (!env.DB) return Response.json([]);
+            try {
+                const userId = url.searchParams.get("userId");
+                let query = "SELECT * FROM orders ORDER BY createdAt DESC";
+                let params: any[] = [];
 
-            const userId = url.searchParams.get("userId");
-            let query = "SELECT * FROM orders ORDER BY createdAt DESC";
-            let params: any[] = [];
+                if (userId) {
+                    query = "SELECT * FROM orders WHERE userId = ? ORDER BY createdAt DESC";
+                    params = [userId];
+                }
 
-            if (userId) {
-                query = "SELECT * FROM orders WHERE userId = ? ORDER BY createdAt DESC";
-                params = [userId];
+                const { results } = await env.DB.prepare(query).bind(...params).all();
+
+                const orders = results.map(o => ({
+                    ...o,
+                    items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || [])
+                }));
+
+                return new Response(JSON.stringify(orders), { headers: { "Content-Type": "application/json" } });
+            } catch (queryErr: any) {
+                if (queryErr.message.includes("no such table: orders")) {
+                    console.warn("Orders table missing. Attempting self-healing...");
+                    await ensureOrdersTable(env.DB);
+                    return new Response(JSON.stringify([]), { headers: { "Content-Type": "application/json" } });
+                }
+                console.error("Orders GET Query Error:", queryErr.message);
+                return new Response(JSON.stringify([]), { headers: { "Content-Type": "application/json" } });
             }
-
-            const { results } = await env.DB.prepare(query).bind(...params).all();
-
-            const orders = results.map(o => ({
-                ...o,
-                items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || [])
-            }));
-
-            return Response.json(orders);
         }
 
         if (request.method === "POST") {
-            if (!env.DB) return Response.json({ success: true, id: "mock-order-id" });
-
             const data: any = await request.json();
+            const orderId = data.id || crypto.randomUUID();
             const {
-                id, userId, customerName, customerEmail, customerPhone,
-                shippingAddress, customization, items, totalAmount, status
+                userId, customerName, customerEmail, customerPhone,
+                shippingAddress, customization, items, totalAmount
             } = data;
 
-            const orderId = id || crypto.randomUUID();
-            await env.DB.prepare(`
-                INSERT INTO orders (
-                  id, userId, customerName, customerEmail, customerPhone, 
-                  shippingAddress, customization, items, totalAmount, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `).bind(
-                orderId,
-                userId, customerName, customerEmail, customerPhone,
-                shippingAddress, customization, JSON.stringify(items || []),
-                totalAmount, status || 'pending'
-            ).run();
-
-            return Response.json({ success: true, id: orderId });
-        }
-
-        if (request.method === "PATCH") {
-            if (!env.DB) return Response.json({ success: true });
-
-            const data: any = await request.json();
-            const { id, status } = data;
-            await env.DB.prepare("UPDATE orders SET status = ? WHERE id = ?").bind(status, id).run();
-            return Response.json({ success: true });
+            try {
+                await env.DB.prepare(`
+                    INSERT INTO orders (id, userId, customerName, customerEmail, customerPhone, shippingAddress, customization, items, totalAmount)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).bind(
+                    orderId,
+                    userId || null,
+                    customerName || null,
+                    customerEmail || null,
+                    customerPhone || null,
+                    shippingAddress || null,
+                    customization || null,
+                    JSON.stringify(items || []),
+                    totalAmount || 0
+                ).run();
+                return new Response(JSON.stringify({ success: true, id: orderId }), { headers: { "Content-Type": "application/json" } });
+            } catch (queryErr: any) {
+                if (queryErr.message.includes("no such table: orders")) {
+                    console.warn("Orders table missing in POST. Attempting self-healing...");
+                    await ensureOrdersTable(env.DB);
+                    await env.DB.prepare(`
+                        INSERT INTO orders (id, userId, customerName, customerEmail, customerPhone, shippingAddress, customization, items, totalAmount)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `).bind(
+                        orderId,
+                        userId || null,
+                        customerName || null,
+                        customerEmail || null,
+                        customerPhone || null,
+                        shippingAddress || null,
+                        customization || null,
+                        JSON.stringify(items || []),
+                        totalAmount || 0
+                    ).run();
+                    return new Response(JSON.stringify({ success: true, id: orderId }), { headers: { "Content-Type": "application/json" } });
+                }
+                throw queryErr;
+            }
         }
 
         return new Response("Method not allowed", { status: 405 });
     } catch (e: any) {
-        return Response.json({
-            error: e.message,
-            stack: e.stack,
-            envKeys: Object.keys(env || {})
-        }, { status: 500 });
+        console.error("CRITICAL ERROR in orders.ts:", e.message);
+        return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-}
+};

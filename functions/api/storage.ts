@@ -1,15 +1,18 @@
-export async function onRequest(context: { request: Request, env: any }) {
+interface Env {
+    BUCKET: R2Bucket;
+}
+
+export const onRequest: PagesFunction<Env> = async (context) => {
     const { request, env } = context;
     const url = new URL(request.url);
 
     try {
-        // GET /api/storage?path=products/filename.jpg
         if (request.method === "GET") {
             const path = url.searchParams.get("path");
             if (!path) return new Response("Missing path", { status: 400 });
 
             if (!env.BUCKET) {
-                // Return a placeholder image if R2 is not connected
+                console.warn("R2 Bucket binding missing in storage GET. Returning placeholder.");
                 const placeholder = await fetch("https://placehold.co/600x400/png?text=Image+Pending+R2");
                 return new Response(placeholder.body, { headers: { "Content-Type": "image/png" } });
             }
@@ -24,13 +27,13 @@ export async function onRequest(context: { request: Request, env: any }) {
             return new Response(object.body, { headers });
         }
 
-        // POST /api/storage?path=products/filename.jpg
         if (request.method === "POST") {
             const path = url.searchParams.get("path");
             if (!path) return new Response("Missing path", { status: 400 });
 
             if (!env.BUCKET) {
-                return Response.json({ success: true, url: "https://placehold.co/600x400/png?text=Mock+Upload" });
+                console.warn("R2 Bucket binding missing in storage POST. Returning mock URL.");
+                return new Response(JSON.stringify({ success: true, url: "https://placehold.co/600x400/png?text=Mock+Upload" }), { headers: { "Content-Type": "application/json" } });
             }
 
             const file = await request.arrayBuffer();
@@ -41,26 +44,27 @@ export async function onRequest(context: { request: Request, env: any }) {
             });
 
             const publicUrl = `/api/storage?path=${encodeURIComponent(path)}`;
-            return Response.json({ success: true, url: publicUrl });
+            return new Response(JSON.stringify({ success: true, url: publicUrl }), { headers: { "Content-Type": "application/json" } });
         }
 
-        // DELETE /api/storage?path=products/filename.jpg
         if (request.method === "DELETE") {
-            if (!env.BUCKET) return Response.json({ success: true });
+            if (!env.BUCKET) {
+                return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
+            }
 
             const path = url.searchParams.get("path");
             if (!path) return new Response("Missing path", { status: 400 });
 
             await env.BUCKET.delete(path);
-            return Response.json({ success: true });
+            return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
         }
 
         return new Response("Method not allowed", { status: 405 });
     } catch (e: any) {
-        return Response.json({
+        console.error("CRITICAL ERROR in storage.ts:", e.message);
+        return new Response(JSON.stringify({
             error: e.message,
-            stack: e.stack,
-            envKeys: Object.keys(env || {})
-        }, { status: 500 });
+            stack: e.stack
+        }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-}
+};
