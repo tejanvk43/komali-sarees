@@ -12,7 +12,7 @@ export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    phone: "",
     subject: "",
     message: ""
   });
@@ -26,7 +26,7 @@ export default function Contact() {
         title: "Message Sent",
         description: "Thank you for contacting us. We will get back to you soon!",
       });
-      setFormData({ name: "", email: "", subject: "", message: "" });
+      setFormData({ name: "", phone: "", subject: "", message: "" });
     } catch (err: any) {
       toast({
         title: "Error",
@@ -123,13 +123,13 @@ export default function Contact() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Email Address</label>
+                      <label className="text-sm font-medium">Mobile Number</label>
                       <Input 
-                        type="email" 
-                        placeholder="Enter Your Email" 
+                        type="tel" 
+                        placeholder="Enter Your Mobile Number" 
                         required 
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         disabled={isSubmitting}
                       />
                     </div>

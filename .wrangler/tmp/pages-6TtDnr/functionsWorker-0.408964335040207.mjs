@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// ../.wrangler/tmp/bundle-l02WSK/checked-fetch.js
+// ../.wrangler/tmp/bundle-DDlaqE/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
@@ -83,7 +83,7 @@ var ensureContactTable = /* @__PURE__ */ __name(async (db) => {
         CREATE TABLE IF NOT EXISTS contact_messages (
             id TEXT PRIMARY KEY,
             name TEXT,
-            email TEXT,
+            phone TEXT,
             subject TEXT,
             message TEXT,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -114,30 +114,33 @@ var onRequest2 = /* @__PURE__ */ __name(async (context) => {
         return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
       }
       const data = await request.json();
-      const { name, email, subject, message } = data;
+      console.log("POST /api/contact received data:", data);
+      const { name, phone, subject, message } = data;
       try {
         await env.DB.prepare(`
-                    INSERT INTO contact_messages (id, name, email, subject, message)
+                    INSERT INTO contact_messages (id, name, phone, subject, message)
                     VALUES (?, ?, ?, ?, ?)
                 `).bind(
           crypto.randomUUID(),
           name || null,
-          email || null,
+          phone || null,
           subject || null,
           message || null
         ).run();
         return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
       } catch (queryErr) {
-        if (queryErr.message.includes("no such table: contact_messages")) {
-          console.warn("Contact table missing in POST. Attempting self-healing...");
+        console.error("Query Error in /api/contact:", queryErr.message);
+        if (queryErr.message.includes("no such table: contact_messages") || queryErr.message.includes("no such column: phone") || queryErr.message.includes("no such column: email")) {
+          console.warn("Contact table missing or schema mismatch. Recreating...");
+          await env.DB.prepare("DROP TABLE IF EXISTS contact_messages").run();
           await ensureContactTable(env.DB);
           await env.DB.prepare(`
-                        INSERT INTO contact_messages (id, name, email, subject, message)
+                        INSERT INTO contact_messages (id, name, phone, subject, message)
                         VALUES (?, ?, ?, ?, ?)
                     `).bind(
             crypto.randomUUID(),
             name || null,
-            email || null,
+            phone || null,
             subject || null,
             message || null
           ).run();
@@ -1221,7 +1224,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-l02WSK/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-DDlaqE/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -1253,7 +1256,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-l02WSK/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-DDlaqE/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

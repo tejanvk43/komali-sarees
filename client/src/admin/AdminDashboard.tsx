@@ -9,7 +9,8 @@ import {
   Plus, Search, Edit, Trash2, LogOut, 
   ShoppingBag, BarChart3, Package, 
   DollarSign, Clock, CheckCircle, 
-  Star, MessageSquare, Menu, X, Mail
+  Star, MessageSquare, Menu, X, Mail,
+  Phone
 } from "lucide-react";
 import { auth } from "@/firebase/client";
 import { useLocation } from "wouter";
@@ -399,7 +400,7 @@ export function AdminDashboard() {
                         <div>
                           <p className="font-semibold text-lg">{msg.name}</p>
                           <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Mail className="h-3 w-3" /> {msg.email}
+                            <Phone className="h-3 w-3" /> {msg.phone}
                           </p>
                         </div>
                       </div>
