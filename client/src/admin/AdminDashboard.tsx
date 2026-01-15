@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAllProducts, deleteProduct, getOrders, updateOrderStatus, getFeedback } from "@/utils/firestore";
+import { getAllProducts, deleteProduct, getOrders, updateOrderStatus, getFeedback, getContactMessages } from "@/utils/firestore";
 import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import {
   Plus, Search, Edit, Trash2, LogOut, 
   ShoppingBag, BarChart3, Package, 
   DollarSign, Clock, CheckCircle, 
-  Star, MessageSquare, Menu, X
+  Star, MessageSquare, Menu, X, Mail
 } from "lucide-react";
 import { auth } from "@/firebase/client";
 import { useLocation } from "wouter";
@@ -20,8 +20,9 @@ export function AdminDashboard() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<any[]>([]);
+  const [contactMessages, setContactMessages] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [view, setView] = useState<'list' | 'add' | 'edit' | 'tags' | 'orders' | 'stats' | 'feedback'>('list');
+  const [view, setView] = useState<'list' | 'add' | 'edit' | 'tags' | 'orders' | 'stats' | 'feedback' | 'messages'>('list');
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
@@ -30,6 +31,7 @@ export function AdminDashboard() {
     loadProducts();
     loadOrders();
     loadFeedback();
+    loadContactMessages();
   }, []);
 
   const loadOrders = async () => {
@@ -40,6 +42,11 @@ export function AdminDashboard() {
   const loadFeedback = async () => {
     const data = await getFeedback();
     setFeedback(data);
+  };
+
+  const loadContactMessages = async () => {
+    const data = await getContactMessages();
+    setContactMessages(data); 
   };
 
   useEffect(() => {
@@ -81,6 +88,7 @@ export function AdminDashboard() {
   const navItems = [
     { label: 'Products', view: 'list' as const },
     { label: 'Orders', view: 'orders' as const },
+    { label: 'Messages', view: 'messages' as const },
     { label: 'Stats', view: 'stats' as const },
     { label: 'Feedback', view: 'feedback' as const },
     { label: 'Attributes', view: 'tags' as const },
@@ -370,6 +378,49 @@ export function AdminDashboard() {
                  })()}
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {view === 'messages' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-xl font-bold">Contact Messages</h2>
+              <Button variant="outline" onClick={loadContactMessages} className="w-full sm:w-auto">Refresh</Button>
+            </div>
+            <div className="grid gap-4">
+              {(Array.isArray(contactMessages) ? contactMessages : []).map((msg) => (
+                <Card key={msg.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          {msg.name?.[0]}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-lg">{msg.name}</p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Mail className="h-3 w-3" /> {msg.email}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(msg.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-sm font-semibold text-primary mb-1 uppercase tracking-wider">Subject: {msg.subject}</p>
+                      <p className="text-gray-700 whitespace-pre-wrap">{msg.message}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {contactMessages.length === 0 && (
+                <div className="text-center py-20 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                  <Mail className="h-12 w-12 text-gray-200 mx-auto mb-4" />
+                  <p className="text-gray-500">No messages received yet.</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

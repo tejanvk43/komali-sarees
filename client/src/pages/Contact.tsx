@@ -4,16 +4,38 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { submitContactMessage } from "@/utils/firestore";
 
 export default function Contact() {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Message Sent",
-      description: "Thank you for contacting us. We will get back to you soon!",
-    });
+    setIsSubmitting(true);
+    try {
+      await submitContactMessage(formData);
+      toast({
+        title: "Message Sent",
+        description: "Thank you for contacting us. We will get back to you soon!",
+      });
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -53,7 +75,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Call Us</h3>
-                      <p className="text-gray-600">09045137306</p>
+                      <p className="text-gray-600">9045137306</p>
                       <p className="text-gray-600">9966888618</p>
                     </div>
                   </div>
@@ -92,17 +114,36 @@ export default function Contact() {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Full Name</label>
-                      <Input placeholder="Enter Your Name" required />
+                      <Input 
+                        placeholder="Enter Your Name" 
+                        required 
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        disabled={isSubmitting}
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Email Address</label>
-                      <Input type="email" placeholder="Enter Your Email" required />
+                      <Input 
+                        type="email" 
+                        placeholder="Enter Your Email" 
+                        required 
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        disabled={isSubmitting}
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Subject</label>
-                    <Input placeholder="Enter Your Subject" required />
+                    <Input 
+                      placeholder="Enter Your Subject" 
+                      required 
+                      value={formData.subject}
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                      disabled={isSubmitting}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -111,12 +152,15 @@ export default function Contact() {
                       placeholder="Enter Your Message" 
                       className="min-h-[150px]" 
                       required 
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      disabled={isSubmitting}
                     />
                   </div>
 
-                  <Button type="submit" className="w-full h-12 text-lg gap-2">
-                    <Send className="h-5 w-5" />
-                    Send Message
+                  <Button type="submit" className="w-full h-12 text-lg gap-2" disabled={isSubmitting}>
+                    <Send className={`h-5 w-5 ${isSubmitting ? 'animate-pulse' : ''}`} />
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
                   </Button>
                 </form>
               </div>

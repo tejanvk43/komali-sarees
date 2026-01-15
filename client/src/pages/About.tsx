@@ -27,7 +27,7 @@ export default function About() {
                 About Us
               </h2>
               <p className="text-gray-700 leading-relaxed text-lg">
-                Harish's Silk Saree House || 9966888618 || Started In 2015 is a unique blend of shopping and customisation. We have pioneered in that form of business line to make things better. We have a whole range of customisable options across all the price ranges.
+                Harish's Silk Saree House || 9966888618 || Started in 2015 is a unique blend of shopping and customisation We have pioneered in that form of business line to make things better we have a whole range of customisable options across all the price ranges.
               </p>
             </div>
           </ScrollReveal>
@@ -39,7 +39,7 @@ export default function About() {
                 Our Product Lines
               </h2>
               <p className="text-gray-700 leading-relaxed text-lg">
-                We deals wide range products of Silks Sarees, Fancy Sarees, Bengal Cotton Sarees, Printed Cotton Sarees, Khadi Cotton Sarees, Linen Sarees, Pure Silk Sarees, Kanchi Sarees, Exclusive Designers which are developed in hose Sarees, Ikath Silk Sarees, Ikath Cotton Sarees, Mangalagiri Sarees, Madhubani Sarees, Gollabhama Sarees, Coimbatore Silks Sarees, Coimbatore Fancy Sarees, Banaras Sarees, Lucknow Sarees, Maheswari Sarees, Chanderi Sarees, Bagh Prints Sarees, Pulkari Sarees, Gujjari Sarees, Kota Sarees, Computer Embroidery, Machinery Embroidery, Aari Embroidery, Hand Paints Sarees and Customised Digital Prints Sarees.
+                We deals wide range products of Silks Sarees, Fancy Sarees, Bengal Cotton Sarees, Printed Cotton Sarees, Khadi Cotton Sarees, Linen Sarees, Pure Silk Sarees, Kanchi Sarees, Exclusive Designers which are developed in hose Sarees, Ikath Silk Sarees, Ikath Cotton Sarees, Mangalagiri Sarees, Madhubani Sarees, Gollabhama Sarees, Coimbatore Silks Sarees, Coimbatore Fancy Sarees, Banaras Sarees, Lucknow Sarees, Maheswari Sarees, Chanderi Sarees, Bagh Prints Sarees, Pulkari Sarees, Gujari Sarees, Kota Sarees, Computer Embroidery, Machinery Embroidery, Aari Embroidery, Hand Paints Sarees and Customised Digital Prints Sarees.
               </p>
             </div>
           </ScrollReveal>
@@ -74,7 +74,7 @@ export default function About() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Contact:</h3>
                   <p className="opacity-90">
-                    Phone: 09045137306<br />
+                    Phone: 9045137306<br />
                     Mobile: 9966888618<br />
                     Email: hssh7691@gmail.com
                   </p>

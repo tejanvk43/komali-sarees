@@ -57,8 +57,8 @@ export function Footer() {
                 
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                  <a href="tel:09045137306" className="hover:text-white transition-colors">
-                    09045137306
+                  <a href="tel:9045137306" className="hover:text-white transition-colors">
+                    9045137306
                   </a>
                 </div>
               </div>

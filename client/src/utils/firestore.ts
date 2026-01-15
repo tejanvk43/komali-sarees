@@ -135,6 +135,27 @@ export async function submitFeedback(feedback: any): Promise<void> {
     if (!response.ok) throw new Error("Failed to submit feedback");
 }
 
+export async function submitContactMessage(message: any): Promise<void> {
+    const response = await fetch(`${API_BASE}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(message)
+    });
+    if (!response.ok) throw new Error("Failed to submit message");
+}
+
+export async function getContactMessages(): Promise<any[]> {
+    try {
+        const response = await fetch(`${API_BASE}/contact`);
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (e) {
+        console.error("Error in getContactMessages:", e);
+        return [];
+    }
+}
+
 export async function isAdmin(uid: string): Promise<boolean> {
     try {
         const response = await fetch(`${API_BASE}/admins?id=${uid}`);
