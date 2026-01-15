@@ -285,6 +285,20 @@ var onRequest3 = /* @__PURE__ */ __name2(async (context) => {
         throw queryErr;
       }
     }
+    if (request.method === "PATCH") {
+      const data = await request.json();
+      const { id, status } = data;
+      if (!id || !status) {
+        return new Response("Missing id or status", { status: 400 });
+      }
+      try {
+        await env.DB.prepare("UPDATE orders SET status = ? WHERE id = ?").bind(status, id).run();
+        return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
+      } catch (queryErr) {
+        console.error("Orders PATCH Error:", queryErr.message);
+        throw queryErr;
+      }
+    }
     return new Response("Method not allowed", { status: 405 });
   } catch (e) {
     console.error("CRITICAL ERROR in orders.ts:", e.message);

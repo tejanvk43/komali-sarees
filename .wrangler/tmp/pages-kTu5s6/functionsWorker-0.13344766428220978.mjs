@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// ../.wrangler/tmp/bundle-PKEELL/checked-fetch.js
+// ../.wrangler/tmp/bundle-gCBp0b/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
@@ -259,6 +259,20 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
           ).run();
           return new Response(JSON.stringify({ success: true, id: orderId }), { headers: { "Content-Type": "application/json" } });
         }
+        throw queryErr;
+      }
+    }
+    if (request.method === "PATCH") {
+      const data = await request.json();
+      const { id, status } = data;
+      if (!id || !status) {
+        return new Response("Missing id or status", { status: 400 });
+      }
+      try {
+        await env.DB.prepare("UPDATE orders SET status = ? WHERE id = ?").bind(status, id).run();
+        return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
+      } catch (queryErr) {
+        console.error("Orders PATCH Error:", queryErr.message);
         throw queryErr;
       }
     }
@@ -1122,7 +1136,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-PKEELL/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-gCBp0b/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -1154,7 +1168,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-PKEELL/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-gCBp0b/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
