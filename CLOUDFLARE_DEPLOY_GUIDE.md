@@ -44,12 +44,21 @@ Add these in **Settings > Functions > Compatibility Flags** or as **Variables**:
 *   `VITE_GEMINI_API_KEY`
 *   `VITE_GEMINI_MODEL` (e.g., `gemini-1.5-flash`)
 
-### Bindings (Crucial Step)
+### Binding Bindings (Crucial Step)
 Go to **Settings > Functions** and add these bindings:
 1.  **D1 database binding**: Set variable name to `DB` and select `komali_db`.
 2.  **R2 bucket binding**: Set variable name to `BUCKET` and select `komali-assets`.
 
-## 4. Manual Deployment
+## 4. Firebase Authentication (Important)
+Since your app is now on a new domain, you must authorize it in Firebase:
+1.  Go to the [Firebase Console](https://console.firebase.google.com/).
+2.  Select your project.
+3.  Go to **Build > Authentication > Settings**.
+4.  Click on the **Authorized domains** tab.
+5.  Click **Add domain** and enter: 
+    `komali-sarees.pages.dev`
+
+## 5. Manual Deployment
 To deploy directly from your local machine:
 ```powershell
 npm run build
