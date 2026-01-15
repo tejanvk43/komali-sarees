@@ -9,7 +9,7 @@ import {
   Plus, Search, Edit, Trash2, LogOut, 
   ShoppingBag, BarChart3, Package, 
   DollarSign, Clock, CheckCircle, 
-  Star, MessageSquare 
+  Star, MessageSquare, Menu, X
 } from "lucide-react";
 import { auth } from "@/firebase/client";
 import { useLocation } from "wouter";
@@ -23,6 +23,7 @@ export function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'tags' | 'orders' | 'stats' | 'feedback'>('list');
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -77,44 +78,90 @@ export function AdminDashboard() {
     setLocation("/admin/login");
   };
 
+  const navItems = [
+    { label: 'Products', view: 'list' as const },
+    { label: 'Orders', view: 'orders' as const },
+    { label: 'Stats', view: 'stats' as const },
+    { label: 'Feedback', view: 'feedback' as const },
+    { label: 'Attributes', view: 'tags' as const },
+  ];
+
+  const handleNavClick = (view: any) => {
+    setView(view);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => setView('list')}>Products</Button>
-            <Button variant="ghost" onClick={() => setView('orders')}>Orders</Button>
-            <Button variant="ghost" onClick={() => setView('stats')}>Stats</Button>
-            <Button variant="ghost" onClick={() => setView('feedback')}>Feedback</Button>
-            <Button variant="ghost" onClick={() => setView('tags')}>Attributes</Button>
-            <Button variant="outline" onClick={handleLogout} className="text-red-600 hover:text-red-700">
+      <header className="bg-white shadow sticky top-0 z-50">
+        <div className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Admin</h1>
+          
+          {/* Desktop Nav */}
+          <div className="hidden lg:flex items-center gap-2">
+            {navItems.map(item => (
+              <Button 
+                key={item.view}
+                variant={view === item.view ? "default" : "ghost"} 
+                onClick={() => setView(item.view)}
+              >
+                {item.label}
+              </Button>
+            ))}
+            <Button variant="outline" onClick={handleLogout} className="text-red-600 hover:text-red-700 ml-2">
               <LogOut className="h-4 w-4 mr-2" /> Logout
             </Button>
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="lg:hidden p-2 text-gray-600"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X /> : <Menu />}
+          </button>
         </div>
+
+        {/* Mobile Nav Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden bg-white border-t p-4 flex flex-col gap-2">
+            {navItems.map(item => (
+              <Button 
+                key={item.view}
+                variant={view === item.view ? "default" : "ghost"} 
+                className="justify-start w-full"
+                onClick={() => handleNavClick(item.view)}
+              >
+                {item.label}
+              </Button>
+            ))}
+            <Button variant="outline" onClick={handleLogout} className="text-red-600 hover:text-red-700 justify-start w-full">
+              <LogOut className="h-4 w-4 mr-2" /> Logout
+            </Button>
+          </div>
+        )}
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 sm:px-6 py-8">
         {view === 'list' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div className="relative w-96">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="relative w-full sm:w-96">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input 
                   placeholder="Search products..." 
-                  className="pl-10"
+                  className="pl-10 w-full"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button onClick={() => { setEditingProduct(undefined); setView('add'); }}>
+              <Button onClick={() => { setEditingProduct(undefined); setView('add'); }} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" /> Add Product
               </Button>
             </div>
 
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -176,11 +223,11 @@ export function AdminDashboard() {
 
         {view === 'orders' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-xl font-bold">Recent Orders</h2>
-              <Button variant="outline" onClick={loadOrders}>Refresh</Button>
+              <Button variant="outline" onClick={loadOrders} className="w-full sm:w-auto">Refresh</Button>
             </div>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -328,9 +375,9 @@ export function AdminDashboard() {
 
         {view === 'feedback' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-xl font-bold">Customer Feedback</h2>
-              <Button variant="outline" onClick={loadFeedback}>Refresh</Button>
+              <Button variant="outline" onClick={loadFeedback} className="w-full sm:w-auto">Refresh</Button>
             </div>
             <div className="grid gap-4">
               {(Array.isArray(feedback) ? feedback : []).map((f) => {

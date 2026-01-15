@@ -62,12 +62,12 @@ export function TagManager() {
   const categories = ["fabric", "color", "occasion", "style", "dressType"];
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow space-y-6">
+    <div className="bg-white p-4 sm:p-6 rounded-lg shadow space-y-6 mt-4 mb-20">
       <h2 className="text-xl font-bold">Manage Attributes (Tags)</h2>
 
       {/* Add Tag Form */}
-      <form onSubmit={handleAddTag} className="flex flex-wrap gap-4 items-end border-b pb-6">
-        <div className="space-y-2">
+      <form onSubmit={handleAddTag} className="flex flex-col sm:flex-row flex-wrap gap-4 items-end border-b pb-6">
+        <div className="space-y-2 w-full sm:w-auto sm:flex-1">
           <Label>Category</Label>
           <select 
             className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -82,17 +82,18 @@ export function TagManager() {
           </select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 w-full sm:w-auto sm:flex-[2]">
           <Label>Name</Label>
           <Input 
             placeholder="e.g. Silk, Red, Wedding" 
             value={newTagName} 
             onChange={(e) => setNewTagName(e.target.value)} 
+            className="w-full"
           />
         </div>
 
         {newTagCategory === 'color' && (
-          <div className="space-y-2">
+          <div className="space-y-2 w-full sm:w-auto">
             <Label>Color Picker</Label>
             <div className="flex items-center gap-2">
               <Input 
@@ -106,7 +107,7 @@ export function TagManager() {
           </div>
         )}
 
-        <Button type="submit">
+        <Button type="submit" className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" /> Add Tag
         </Button>
       </form>

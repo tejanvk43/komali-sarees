@@ -127,10 +127,10 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
   const dressTypeTags = availableTags.filter(t => t.category === 'dressType');
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl mx-auto bg-white p-4 sm:p-6 rounded shadow mt-4 mb-20">
       <h2 className="text-xl font-bold mb-4">{initialData ? 'Edit Product' : 'Add New Product'}</h2>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Product Name</label>
           <Input {...register("name", { required: true })} placeholder="Tussar Silk Saree" />
@@ -146,7 +146,7 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
         <Textarea {...register("description")} placeholder="Rich textured Tussar silk saree..." />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Dress Type</label>
           <select 
@@ -173,7 +173,7 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Color</label>
           <select 
@@ -203,7 +203,7 @@ export function ProductForm({ initialData, onSuccess }: { initialData?: Product,
       <div className="border p-4 rounded-lg bg-gray-50">
         <label className="block mb-3 text-sm font-medium">Product Images (First image is cover)</label>
         
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
           {currentImages.map((url, index) => (
             <div key={url} className="relative group aspect-[3/4] bg-gray-200 rounded overflow-hidden border">
               <img src={url} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
