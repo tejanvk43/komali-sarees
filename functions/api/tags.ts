@@ -21,6 +21,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         { id: "t2", name: "Cotton", category: "Fabric", colorHex: "#F0F8FF" }
     ];
 
+    const url = new URL(request.url);
+
     try {
         if (!env.DB) {
             console.warn("D1 DB binding missing in tags. Returning mock data.");
@@ -59,6 +61,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
                         .bind(id, name, category, colorHex || null).run();
                     return new Response(JSON.stringify({ success: true, id }), { headers: { "Content-Type": "application/json" } });
                 }
+                throw queryErr;
+            }
+        }
+
+        if (request.method === "DELETE") {
+            const id = url.searchParams.get("id");
+            if (!id) return new Response("Missing id", { status: 400 });
+
+            try {
+                await env.DB.prepare("DELETE FROM tags WHERE id = ?").bind(id).run();
+                return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
+            } catch (queryErr: any) {
+                console.error("Tags DELETE Query Error:", queryErr.message);
                 throw queryErr;
             }
         }

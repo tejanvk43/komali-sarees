@@ -117,6 +117,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             }
         }
 
+        if (request.method === "DELETE") {
+            const id = url.searchParams.get("id");
+            if (!id) return new Response("Missing id", { status: 400 });
+
+            try {
+                await env.DB.prepare("DELETE FROM products WHERE id = ?").bind(id).run();
+                return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
+            } catch (queryErr: any) {
+                console.error("Products DELETE Query Error:", queryErr.message);
+                throw queryErr;
+            }
+        }
+
         return new Response("Method not allowed", { status: 405 });
     } catch (e: any) {
         console.error("CRITICAL ERROR in products.ts:", e.message);
