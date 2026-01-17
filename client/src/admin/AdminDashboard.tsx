@@ -258,6 +258,11 @@ export function AdminDashboard() {
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium">{order.customerName}</div>
                           <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
+                          {order.customerPhone && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <Phone className="h-3 w-3" /> {order.customerPhone}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-sm">₹{order.totalAmount?.toLocaleString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap">

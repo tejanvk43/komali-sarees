@@ -8,9 +8,19 @@ const ensureUsersTable = async (db: D1Database) => {
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
+            phone TEXT,
+            address TEXT,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `).run();
+
+    // Self-healing: try to add columns if they don't exist
+    try {
+        await db.prepare("ALTER TABLE users ADD COLUMN phone TEXT").run();
+    } catch (e) { }
+    try {
+        await db.prepare("ALTER TABLE users ADD COLUMN address TEXT").run();
+    } catch (e) { }
 };
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -43,7 +53,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
         if (request.method === "POST") {
             const data: any = await request.json();
-            const { id, name, email } = data;
+            const { id, name, email, phone, address } = data;
 
             if (!id || !name || !email) {
                 return new Response("Missing required fields (id, name, email)", { status: 400 });
@@ -51,25 +61,29 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
             try {
                 await env.DB.prepare(`
-                    INSERT INTO users (id, name, email)
-                    VALUES (?, ?, ?)
+                    INSERT INTO users (id, name, email, phone, address)
+                    VALUES (?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
                       name=excluded.name,
-                      email=excluded.email
-                `).bind(id, name, email).run();
+                      email=excluded.email,
+                      phone=excluded.phone,
+                      address=excluded.address
+                `).bind(id, name, email, phone || null, address || null).run();
 
                 return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
             } catch (queryErr: any) {
-                if (queryErr.message.includes("no such table: users")) {
-                    console.warn("Users table missing in POST. Attempting self-healing...");
+                if (queryErr.message.includes("no such table: users") || queryErr.message.includes("no such column")) {
+                    console.warn("Users table missing or outdated in POST. Attempting self-healing...");
                     await ensureUsersTable(env.DB);
                     await env.DB.prepare(`
-                        INSERT INTO users (id, name, email)
-                        VALUES (?, ?, ?)
+                        INSERT INTO users (id, name, email, phone, address)
+                        VALUES (?, ?, ?, ?, ?)
                         ON CONFLICT(id) DO UPDATE SET
                           name=excluded.name,
-                          email=excluded.email
-                    `).bind(id, name, email).run();
+                          email=excluded.email,
+                          phone=excluded.phone,
+                          address=excluded.address
+                    `).bind(id, name, email, phone || null, address || null).run();
                     return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
                 }
                 throw queryErr;
